@@ -48,7 +48,7 @@ public class ImageHandler {
             // MOCK CODE
             ClassLoader classLoader = getClass().getClassLoader();
             File uploadImg = File.createTempFile("mock_",
-                    FilenameUtils.getExtension(img.getAbsolutePath()), 
+                    "." + FilenameUtils.getExtension(img.getAbsolutePath()), 
                     new File(classLoader.getResource("mock/files/").getFile()));
             outputStream = new FileOutputStream(uploadImg.getAbsolutePath());
             while (fileReader.read(buffer) != -1) {
