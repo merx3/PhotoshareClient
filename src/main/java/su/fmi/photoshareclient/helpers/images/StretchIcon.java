@@ -1,7 +1,7 @@
 /**
  * @(#)StretchIcon.java	1.0 03/27/12
  */
-package su.fmi.photoshareclient.helpers;
+package su.fmi.photoshareclient.helpers.images;
 
 import java.awt.Component;
 import java.awt.Container;

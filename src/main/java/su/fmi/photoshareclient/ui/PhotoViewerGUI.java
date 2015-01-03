@@ -5,23 +5,16 @@
  */
 package su.fmi.photoshareclient.ui;
 
-import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.Point;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import su.fmi.photoshareclient.helpers.ImageItem;
-import su.fmi.photoshareclient.helpers.ImageLabel;
-import su.fmi.photoshareclient.helpers.StretchIcon;
+import su.fmi.photoshareclient.helpers.images.ImageLabel;
+import su.fmi.photoshareclient.helpers.Pagination;
+import su.fmi.photoshareclient.helpers.images.StretchIcon;
 import su.fmi.photoshareclient.remote.ImageHandler;
 
 /**
@@ -37,11 +30,26 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         initComponents();
 
         remoteImagesHandler = new ImageHandler();
-        List<Image> allImages = remoteImagesHandler.getImages();
+        List<ImageLabel> allImages = remoteImagesHandler.getImages();
+        Pagination.setImages(allImages);
+        
+        refreshPage();
+    }
+    
+    public void selectImage(ImageLabel img){
+        if(this.selectedImage != img){
+            this.selectedImage.deselect();
+        }
+        this.selectedImage = img;
+    }
 
-        for (Image img : allImages) {
-            JLabel picLabel = new ImageLabel(new StretchIcon(img));
-            jPanel1.add(picLabel);
+    private void refreshPage() {
+        List<ImageLabel> pageImages = Pagination.getCurrentPageImages();
+        jPanel1.removeAll();
+        jPanel1.revalidate();
+        jPanel1.repaint();
+        for (ImageLabel img : pageImages) {
+            jPanel1.add(img);
         }
     }
 
@@ -53,16 +61,15 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
 
         jPanel6 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
+        uploadButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
-        jButton2 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        prevPageButton = new javax.swing.JButton();
+        nextPageButton = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -72,13 +79,13 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         jPanel6.setPreferredSize(new java.awt.Dimension(704, 35));
         jPanel6.setLayout(new javax.swing.BoxLayout(jPanel6, javax.swing.BoxLayout.LINE_AXIS));
 
-        jButton1.setText("Upload");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        uploadButton.setText("Upload");
+        uploadButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                uploadButtonActionPerformed(evt);
             }
         });
-        jPanel6.add(jButton1);
+        jPanel6.add(uploadButton);
 
         getContentPane().add(jPanel6, java.awt.BorderLayout.PAGE_START);
 
@@ -105,11 +112,23 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
 
         jPanel3.setPreferredSize(new java.awt.Dimension(10, 35));
 
-        jButton2.setText("«");
-        jPanel3.add(jButton2);
+        prevPageButton.setText("«");
+        prevPageButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                prevPageButtonMouseClicked(evt);
+            }
+        });
+        jPanel3.add(prevPageButton);
+        prevPageButton.getAccessibleContext().setAccessibleName("prevPage");
 
-        jButton4.setText("»");
-        jPanel3.add(jButton4);
+        nextPageButton.setText("»");
+        nextPageButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                nextPageButtonMouseClicked(evt);
+            }
+        });
+        jPanel3.add(nextPageButton);
+        nextPageButton.getAccessibleContext().setAccessibleName("nextPage");
 
         jPanel2.add(jPanel3);
 
@@ -133,7 +152,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void uploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadButtonActionPerformed
         if (uploadFile == null) {
             uploadFile = new JFileChooser();
         }
@@ -142,11 +161,22 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         int returnVal = uploadFile.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File uploadImage = uploadFile.getSelectedFile();
+            Pagination.setImages(remoteImagesHandler.getImages());
             remoteImagesHandler.uploadImage(uploadImage);
         } else {
             System.out.println("File access cancelled by user.");
         }
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_uploadButtonActionPerformed
+
+    private void prevPageButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_prevPageButtonMouseClicked
+        Pagination.previousPage();
+        refreshPage();
+    }//GEN-LAST:event_prevPageButtonMouseClicked
+
+    private void nextPageButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_nextPageButtonMouseClicked
+        Pagination.nextPage();
+        refreshPage();
+    }//GEN-LAST:event_nextPageButtonMouseClicked
 
     /**
      * @param args the command line arguments
@@ -184,16 +214,17 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JButton nextPageButton;
+    private javax.swing.JButton prevPageButton;
+    private javax.swing.JButton uploadButton;
     // End of variables declaration//GEN-END:variables
     private javax.swing.JFileChooser uploadFile;
     private ImageHandler remoteImagesHandler;
+    private ImageLabel selectedImage = null;
 }
