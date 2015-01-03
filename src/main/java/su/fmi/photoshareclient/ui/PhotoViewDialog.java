@@ -21,7 +21,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import org.apache.commons.io.FilenameUtils;
+import su.fmi.photoshareclient.helpers.Pagination;
 import su.fmi.photoshareclient.helpers.images.ImageLabel;
+import su.fmi.photoshareclient.remote.ImageHandler;
 
 /**
  *
@@ -47,7 +49,7 @@ public class PhotoViewDialog extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -63,6 +65,7 @@ public class PhotoViewDialog extends javax.swing.JDialog {
         DeleteImageButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("View Image");
 
         jPanel1.setLayout(new java.awt.GridLayout(1, 1));
 
@@ -77,6 +80,11 @@ public class PhotoViewDialog extends javax.swing.JDialog {
         jPanel2.add(SaveImageButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 100, -1));
 
         DeleteImageButton.setText("Delete");
+        DeleteImageButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                DeleteImageButtonMouseClicked(evt);
+            }
+        });
         jPanel2.add(DeleteImageButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 0, 90, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -144,6 +152,18 @@ public class PhotoViewDialog extends javax.swing.JDialog {
             }
         }
     }//GEN-LAST:event_SaveImageButtonMouseClicked
+
+    private void DeleteImageButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_DeleteImageButtonMouseClicked
+        int result = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete image " + this.imageLabel.getFileName() + "?", "Delete image", JOptionPane.YES_NO_OPTION);
+        if (result == JOptionPane.YES_OPTION) {
+            ImageHandler.deleteImage(this.imageLabel.getImageId());
+            Pagination.removeImage(this.imageLabel.getImageId());
+            ((PhotoViewerGUI)this.getParent()).refreshPage();
+            setVisible(false);
+            dispose();
+        }
+    }//GEN-LAST:event_DeleteImageButtonMouseClicked
 
     /**
      * @param args the command line arguments

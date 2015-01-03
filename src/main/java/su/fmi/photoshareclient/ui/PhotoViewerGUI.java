@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import su.fmi.photoshareclient.helpers.images.ImageLabel;
 import su.fmi.photoshareclient.helpers.Pagination;
@@ -26,9 +27,10 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
     /**
      * Creates new form PhotoViewerGUI
      */
-    public PhotoViewerGUI() {
+    public PhotoViewerGUI(JFrame parent) {
         initComponents();
-
+        
+        this.parent = parent;
         remoteImagesHandler = new ImageHandler();
         List<ImageLabel> allImages = remoteImagesHandler.getImages();
         Pagination.setImages(allImages);
@@ -43,7 +45,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         this.selectedImage = img;
     }
 
-    private void refreshPage() {
+    public void refreshPage() {
         List<ImageLabel> pageImages = Pagination.getCurrentPageImages();
         jPanel1.removeAll();
         jPanel1.revalidate();
@@ -64,6 +66,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
 
         jPanel6 = new javax.swing.JPanel();
         uploadButton = new javax.swing.JButton();
+        logoutButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
@@ -77,7 +80,6 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
 
         jPanel6.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         jPanel6.setPreferredSize(new java.awt.Dimension(704, 35));
-        jPanel6.setLayout(new javax.swing.BoxLayout(jPanel6, javax.swing.BoxLayout.LINE_AXIS));
 
         uploadButton.setText("Upload");
         uploadButton.addActionListener(new java.awt.event.ActionListener() {
@@ -85,7 +87,34 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
                 uploadButtonActionPerformed(evt);
             }
         });
-        jPanel6.add(uploadButton);
+
+        logoutButton.setText("Logout");
+        logoutButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                logoutButtonMouseClicked(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addGap(26, 26, 26)
+                .addComponent(uploadButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 524, Short.MAX_VALUE)
+                .addComponent(logoutButton)
+                .addContainerGap())
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addGap(5, 5, 5)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(uploadButton)
+                    .addComponent(logoutButton))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
         getContentPane().add(jPanel6, java.awt.BorderLayout.PAGE_START);
 
@@ -101,7 +130,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 283, Short.MAX_VALUE)
+            .addGap(0, 234, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -138,7 +167,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 283, Short.MAX_VALUE)
+            .addGap(0, 234, Short.MAX_VALUE)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -178,6 +207,13 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         refreshPage();
     }//GEN-LAST:event_nextPageButtonMouseClicked
 
+    private void logoutButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_logoutButtonMouseClicked
+        ((LoginGUI)this.parent).clearForm();
+        setVisible(false);
+        dispose();
+        this.parent.setVisible(true);
+    }//GEN-LAST:event_logoutButtonMouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -208,7 +244,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new PhotoViewerGUI().setVisible(true);
+                new PhotoViewerGUI(new LoginGUI()).setVisible(true);
             }
         });
     }
@@ -220,6 +256,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JButton logoutButton;
     private javax.swing.JButton nextPageButton;
     private javax.swing.JButton prevPageButton;
     private javax.swing.JButton uploadButton;
@@ -227,4 +264,5 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
     private javax.swing.JFileChooser uploadFile;
     private ImageHandler remoteImagesHandler;
     private ImageLabel selectedImage = null;
+    private JFrame parent;
 }

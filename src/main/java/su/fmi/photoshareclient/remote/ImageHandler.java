@@ -66,7 +66,7 @@ public class ImageHandler {
         return null;
     }
 
-    public void uploadImage(File img) {
+    public static void uploadImage(File img) {
         // read the image file
         FileInputStream fileReader = null;
         FileOutputStream outputStream = null;
@@ -74,7 +74,7 @@ public class ImageHandler {
             byte[] buffer = new byte[1000];
             fileReader = new FileInputStream(img.getAbsolutePath());
             // MOCK CODE
-            ClassLoader classLoader = getClass().getClassLoader();
+            ClassLoader classLoader = ImageHandler.class.getClassLoader();
             File uploadImg = File.createTempFile("mock_",
                     "." + FilenameUtils.getExtension(img.getAbsolutePath()),
                     new File(classLoader.getResource("mock/files/").getFile()));
@@ -126,10 +126,11 @@ public class ImageHandler {
         for (ImageLabel img : mockImages) {
             if (img.getImageId() == id) {
                 mockImages.remove(img);
-                ClassLoader classLoader = ImageHandler.class.getClass().getClassLoader();
+                ClassLoader classLoader = ImageHandler.class.getClassLoader();
                 String path = classLoader.getResource("mock/files/").getPath();
                 File toDelete = new File(path, img.getFileName());
                 toDelete.delete();
+                return;
             }
         }
     }

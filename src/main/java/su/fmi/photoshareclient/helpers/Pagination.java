@@ -52,6 +52,15 @@ public class Pagination {
         }
         selectedImage = image;
     }
+    
+    public static void removeImage(int imageId){
+        for (ImageLabel image : images) {
+            if(image.getImageId() == imageId){
+                images.remove(image);
+                return;
+            }
+        }
+    }
 
     public static ImageLabel getSelectedImage() {
         return selectedImage;
