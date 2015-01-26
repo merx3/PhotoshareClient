@@ -81,7 +81,7 @@ public class ImageLabel extends JLabel implements MouseListener {
     public void mouseClicked(MouseEvent e) {        
         if (e.getClickCount() == 2 && !e.isConsumed()) {
             e.consume();
-            ImageLabel fullScaleImage = ImageHandler.getImage(this.imageId);
+            ImageLabel fullScaleImage = ImageHandler.getImage(this.getImageId(), this.getFileName());
             JDialog viewImageDialog = new PhotoViewDialog(this.getOwningFrame(this), true, fullScaleImage);
             viewImageDialog.setLocationRelativeTo(this.getParent());
             viewImageDialog.setVisible(true);

@@ -7,9 +7,13 @@ package su.fmi.photoshareclient.ui;
 
 import java.awt.Image;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -54,7 +58,7 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
             jPanel1.add(img);
         }
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -189,9 +193,15 @@ public class PhotoViewerGUI extends javax.swing.JFrame {
         //In response to a button click:
         int returnVal = uploadFile.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File uploadImage = uploadFile.getSelectedFile();
-            Pagination.setImages(remoteImagesHandler.getImages());
-            remoteImagesHandler.uploadImage(uploadImage);
+            try {
+                File uploadImage = uploadFile.getSelectedFile();
+                Pagination.setImages(remoteImagesHandler.getImages());
+                remoteImagesHandler.uploadImage(uploadImage);
+                Pagination.getImages().add(new ImageLabel(ImageIO.read(uploadImage), -1, uploadImage.getName()));
+                this.refreshPage();
+            } catch (IOException ex) {
+                Logger.getLogger(PhotoViewerGUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } else {
             System.out.println("File access cancelled by user.");
         }

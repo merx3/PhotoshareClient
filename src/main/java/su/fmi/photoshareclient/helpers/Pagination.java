@@ -21,7 +21,7 @@ public class Pagination {
     private static int pageNumber;
 
     static {
-        imagesPerPage = 9;
+        imagesPerPage = 6;
         pageNumber = 1;
         selectedImage = null;
     }
@@ -53,9 +53,9 @@ public class Pagination {
         selectedImage = image;
     }
     
-    public static void removeImage(int imageId){
+    public static void removeImage(String imageName){
         for (ImageLabel image : images) {
-            if(image.getImageId() == imageId){
+            if(image.getFileName() == imageName){
                 images.remove(image);
                 return;
             }

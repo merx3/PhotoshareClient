@@ -5,27 +5,47 @@
  */
 package su.fmi.photoshareclient.remote;
 
+import com.google.gson.Gson;
 import java.awt.AlphaComposite;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Calendar;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import org.apache.commons.io.FilenameUtils;
 import su.fmi.photoshareclient.helpers.Pagination;
+import su.fmi.photoshareclient.helpers.ProjectProperties;
+import su.fmi.photoshareclient.helpers.RemoteImage;
 import su.fmi.photoshareclient.helpers.images.ImageLabel;
+//import su.fmi.photoshareclient.ui.LoginGUI;
+
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.util.EntityUtils;
 
 /**
  *
@@ -36,103 +56,145 @@ import su.fmi.photoshareclient.helpers.images.ImageLabel;
  */
 public class ImageHandler {
 
-    private static ArrayList<ImageLabel> mockImages;
 
-    static {
+    public static ImageLabel getImage(int id, String name) {
         try {
-            mockImages = new ArrayList<ImageLabel>();
-            int imageId = 1;
+            // logic for user verification
 
-            ClassLoader classLoader = ImageHandler.class.getClassLoader();
-            File mockImagesFolder = new File(classLoader.getResource("mock/files").getFile());
+//		Client client = ClientBuilder.newBuilder().newClient();
+//            WebTarget target = client.target("http://94.156.77.61:8080/photoshare");
+//            target = target.path("rest/image/getfile/MiltonStapler.jpg");
+//
+//            Invocation.Builder builder = target.request();
+//            Response response = builder.get();
+//            FileInputStream book = builder.get(FileInputStream.class);
+//            System.out.println("done");
+            ProjectProperties props = new ProjectProperties();
+            String webPage = "http://" + props.get("socket") + props.get("restEndpoint") + "/image/getfile/" + name;
+            URL url = new URL(webPage);
+            URLConnection urlConnection = url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + LoginHandler.getAuthStringEncripted());
+            InputStream is = urlConnection.getInputStream();
+//            InputStreamReader isr = new InputStreamReader(is);
+//            
+//            int numCharsRead;
+//            char[] charArray = new char[1024];
+//            StringBuffer sb = new StringBuffer();
+//            while ((numCharsRead = isr.read(charArray)) > 0) {
+//                sb.append(charArray, 0, numCharsRead);
+//            }
+//            String result = sb.toString();
+            BufferedImage bi = ImageIO.read(is);
+            ImageLabel img = new ImageLabel(bi, id, name);
+            return img;
 
-            for (File fileEntry : mockImagesFolder.listFiles()) {
-                if (!fileEntry.isDirectory()) {
-                    mockImages.add(new ImageLabel(ImageIO.read(fileEntry), imageId, fileEntry.getName()));
-                    imageId++;
-                }
-            }
+//            System.out.println("*** BEGIN ***");
+//            System.out.println(result);
+//            System.out.println("*** END ***");
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(LoginHandler.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(ImageHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public static ImageLabel getImage(int id) {
-        for (ImageLabel img : mockImages) {
-            if (img.getImageId() == id) {
-                return img;
-            }
+            Logger.getLogger(LoginHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
     public static void uploadImage(File img) {
-        // read the image file
-        FileInputStream fileReader = null;
-        FileOutputStream outputStream = null;
-        try {
-            byte[] buffer = new byte[1000];
-            fileReader = new FileInputStream(img.getAbsolutePath());
-            // MOCK CODE
-            ClassLoader classLoader = ImageHandler.class.getClassLoader();
-            File uploadImg = File.createTempFile("mock_",
-                    "." + FilenameUtils.getExtension(img.getAbsolutePath()),
-                    new File(classLoader.getResource("mock/files/").getFile()));
-            outputStream = new FileOutputStream(uploadImg.getAbsolutePath());
-            while (fileReader.read(buffer) != -1) {
-                outputStream.write(buffer);
-            }
-            // END MOCK CODE
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(ImageHandler.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(ImageHandler.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                if (fileReader != null) {
-                    fileReader.close();
-                }
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(ImageHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+        
+      try {
+            HttpClient httpclient = HttpClientBuilder.create().build();
 
-        //upload the file 
+            ProjectProperties props = new ProjectProperties();
+            String endpoint = "http://" + props.get("socket") + props.get("restEndpoint") + "/image/create";
+            HttpPost httppost = new HttpPost(endpoint);
+
+            MultipartEntityBuilder  mpEntity = MultipartEntityBuilder.create();
+            ContentBody cbFile = new FileBody(img, ContentType.MULTIPART_FORM_DATA, img.getName());
+            mpEntity.addTextBody("fileName", img.getName());
+            mpEntity.addTextBody("description", "File uploaded via Photoshare Desktop Cliend on " + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(Calendar.getInstance().getTime()));
+            
+            mpEntity.addPart("fileUpload",  cbFile);
+
+            httppost.setHeader("Authorization", "Basic " + LoginHandler.getAuthStringEncripted());
+            
+            httppost.setEntity(mpEntity.build());
+            HttpResponse response = httpclient.execute(httppost);
+            HttpEntity resEntity = response.getEntity();
+
+            if (resEntity != null) {
+              System.out.println(EntityUtils.toString(resEntity));
+            }
+            if (resEntity != null) {
+              EntityUtils.consume(resEntity);
+            }
+
+            httppost.releaseConnection();
+        }catch (IOException ex) {
+              Logger.getLogger(ImageHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public static ArrayList<ImageLabel> getImages() {
-        ArrayList<ImageLabel> images = new ArrayList<ImageLabel>();
-        Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        for (ImageLabel mockImage : mockImages) {
-            int imageWidth = mockImage.getImage().getWidth(null);
-            int imageHeight = mockImage.getImage().getHeight(null);
-            // just a relative estimation
-            int imagesPerColumn = (int) Math.floor(Math.sqrt(Pagination.getImagesPerPage()));
-            double ratio = (screenSize.height / (double)imageHeight < screenSize.width / (double)imageWidth)
-                    ? screenSize.height / (double)imageHeight : screenSize.width / (double)imageWidth;
-            ratio = ratio / imagesPerColumn; // reduce ratio because more than 1 image are located in the column
-            int resizeWidth = (int)(imageWidth * ratio);
-            int resizeHeight = (int)(imageHeight * ratio);
-            Image resizedImage = createResizedCopy(mockImage.getImage(), resizeWidth, resizeHeight, false);
-            images.add(new ImageLabel(resizedImage, mockImage.getImageId(), mockImage.getFileName()));
+        ProjectProperties props = new ProjectProperties();
+        String webPage = "http://" + props.get("socket") + props.get("restEndpoint") + "/image";
+        URL url;
+        try {
+            url = new URL(webPage);
+            URLConnection urlConnection = url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + LoginHandler.getAuthStringEncripted());
+            InputStream is = urlConnection.getInputStream();
+
+            InputStreamReader isr = new InputStreamReader(is);
+
+            int numCharsRead;
+            char[] charArray = new char[1024];
+            StringBuffer sb = new StringBuffer();
+            while ((numCharsRead = isr.read(charArray)) > 0) {
+                sb.append(charArray, 0, numCharsRead);
+            }
+            String result = sb.toString();
+            Gson gson = new Gson();
+
+            RemoteImage[] remoteImages = gson.fromJson(result, RemoteImage[].class);
+
+            ArrayList<ImageLabel> images = new ArrayList<ImageLabel>();
+            Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+            for (RemoteImage rimg : remoteImages) {
+                ImageLabel img = getImage(rimg.id, rimg.fileName);
+                int imageWidth = img.getImage().getWidth(null);
+                int imageHeight = img.getImage().getHeight(null);
+                // just a relative estimation
+                int imagesPerColumn = (int) Math.floor(Math.sqrt(Pagination.getImagesPerPage()));
+                double ratio = (screenSize.height / (double) imageHeight < screenSize.width / (double) imageWidth)
+                        ? screenSize.height / (double) imageHeight : screenSize.width / (double) imageWidth;
+                ratio = ratio / imagesPerColumn; // reduce ratio because more than 1 image are located in the column
+                int resizeWidth = (int) (imageWidth * ratio);
+                int resizeHeight = (int) (imageHeight * ratio);
+                Image resizedImage = createResizedCopy(img.getImage(), resizeWidth, resizeHeight, false);
+                images.add(new ImageLabel(resizedImage, img.getImageId(), img.getFileName()));
+            }
+            return images;
+        } catch (MalformedURLException ex) {
+            System.out.println(ex);
+        } catch (IOException ex) {
+            System.out.println(ex);
         }
-        return images;
+
+        return null;
     }
 
-    public static void deleteImage(int id) {
-        for (ImageLabel img : mockImages) {
-            if (img.getImageId() == id) {
-                mockImages.remove(img);
-                ClassLoader classLoader = ImageHandler.class.getClassLoader();
-                String path = classLoader.getResource("mock/files/").getPath();
-                File toDelete = new File(path, img.getFileName());
-                toDelete.delete();
-                return;
-            }
-        }
+    public static void deleteImage(String fileName) {
+        // TODO
+//        for (ImageLabel img : mockImages) {
+//            if (img.getImageId() == id) {
+//                mockImages.remove(img);
+//                ClassLoader classLoader = ImageHandler.class.getClassLoader();
+//                String path = classLoader.getResource("mock/files/").getPath();
+//                File toDelete = new File(path, img.getFileName());
+//                toDelete.delete();
+//                return;
+//            }
+//        }
     }
 
     public static BufferedImage createResizedCopy(Image originalImage,

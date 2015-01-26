@@ -157,8 +157,8 @@ public class PhotoViewDialog extends javax.swing.JDialog {
         int result = JOptionPane.showConfirmDialog(this,
                 "Are you sure you want to delete image " + this.imageLabel.getFileName() + "?", "Delete image", JOptionPane.YES_NO_OPTION);
         if (result == JOptionPane.YES_OPTION) {
-            ImageHandler.deleteImage(this.imageLabel.getImageId());
-            Pagination.removeImage(this.imageLabel.getImageId());
+            ImageHandler.deleteImage(this.imageLabel.getFileName());
+            Pagination.removeImage(this.imageLabel.getFileName());
             ((PhotoViewerGUI)this.getParent()).refreshPage();
             setVisible(false);
             dispose();
